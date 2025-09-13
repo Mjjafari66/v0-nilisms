@@ -10,6 +10,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -38,6 +41,19 @@ jobs:
 
       - name: Export static site (optional)
         run: pnpm exec next export -o out || true
+
+      - name: Verify export output
+        run: |
+          if [ ! -d "out" ] || [ -z "$(ls -A out 2>/dev/null)" ]; then
+            echo "ERROR: ./out is missing or empty. Make sure 'next export' produced a static site." >&2
+            ls -la || true
+            exit 1
+          fi
+
+      - name: Configure git for deploy
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
