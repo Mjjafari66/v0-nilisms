@@ -12,6 +12,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import { saveFreeTrialSubmission } from "@/lib/supabaseClient"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
@@ -56,23 +57,41 @@ export default function HomePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    const data = {
-      ...formData,
-      timestamp: new Date().toISOString(),
-      id: Date.now(),
+    const payload = {
+      name: formData.name,
+      mobile: formData.mobile,
+      created_at: new Date().toISOString(),
     }
 
-    const existingData = JSON.parse(localStorage.getItem("nili-sms-leads") || "[]")
-    existingData.push(data)
-    localStorage.setItem("nili-sms-leads", JSON.stringify(existingData))
+    try {
+      await saveFreeTrialSubmission(payload)
+      setShowSuccess(true)
+      setFormData({ name: "", mobile: "" })
 
-    setShowSuccess(true)
-    setFormData({ name: "", mobile: "" })
+      setTimeout(() => {
+        setIsModalOpen(false)
+        setShowSuccess(false)
+      }, 3000)
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('Failed to save submission to Supabase', err)
+      // Fallback: save locally if Supabase fails
+      const data = {
+        ...payload,
+        fallback: true,
+        id: Date.now(),
+      }
+      const existingData = JSON.parse(localStorage.getItem("nili-sms-leads") || "[]")
+      existingData.push(data)
+      localStorage.setItem("nili-sms-leads", JSON.stringify(existingData))
+      setShowSuccess(true)
+      setFormData({ name: "", mobile: "" })
 
-    setTimeout(() => {
-      setIsModalOpen(false)
-      setShowSuccess(false)
-    }, 3000)
+      setTimeout(() => {
+        setIsModalOpen(false)
+        setShowSuccess(false)
+      }, 3000)
+    }
   }
 
   return (
@@ -146,13 +165,13 @@ export default function HomePage() {
           <div className="animate-fade-in-up">
             <Badge variant="secondary" className="mb-8 px-6 py-3 text-base font-semibold shadow-lg border-primary/20">
               <Award className="w-5 h-5 ml-2" />
-              بیش از ۵ میلیون شماره موبایل فعال و معتبر
+              بیش از ۵۰ میلیون شماره موبایل فعال و معتبر
             </Badge>
           </div>
 
           <div className="animate-fade-in-up delay-200">
             <h1 className="text-6xl md:text-8xl font-bold mb-10 text-balance leading-tight">
-              پیامک تبلیغاتی
+              پیامک انبوه تبلیغاتی
               <span className="block bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
                 هوشمند و مؤثر
               </span>
@@ -522,7 +541,7 @@ export default function HomePage() {
                   ))}
                 </div>
                 <p className="text-muted-foreground mb-8 leading-relaxed text-lg">
-                  "پلتفرم نیلی اس ام اس به ما کمک کرد تا بازاریابی‌های خود را به سطح جهانی برسانیم. امکانات فیلترینگ و
+                  "پلتفرم نیلی اس ام اس به ما کمک کرد تا بازاریابی‌های خود را به سطح کشوری برسانیم. امکانات فیلترینگ و
                   ارسال انبوه بسیار مفید است."
                 </p>
                 <div className="flex items-center gap-4">
