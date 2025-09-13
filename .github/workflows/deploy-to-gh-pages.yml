@@ -39,17 +39,51 @@ jobs:
         env:
           NODE_ENV: production
 
-      - name: Ensure export output
+      - name: Ensure export output (try multiple fallbacks)
         run: |
-          # Next 14+ uses `output: 'export'` which writes to .next/output/export
-          EXPORT_DIR=".next/output/export"
-          if [ -d "$EXPORT_DIR" ] && [ -n "$(ls -A $EXPORT_DIR 2>/dev/null)" ]; then
-            echo "Found export in $EXPORT_DIR"
-            # copy to ./out for consistency with deploy step
-            rm -rf out || true
-            cp -R "$EXPORT_DIR" out
-          else
-            echo "ERROR: export output not found at $EXPORT_DIR. Build may not have produced a static export." >&2
+          set -euo pipefail
+          rm -rf out || true
+          # Preferred: modern Next export location
+          if [ -d ".next/output/export" ] && [ -n "$(ls -A .next/output/export 2>/dev/null)" ]; then
+            echo "Using .next/output/export"
+            cp -R .next/output/export out
+            exit 0
+          fi
+
+          # Fallback: older next export directory
+          if [ -d ".next/export" ] && [ -n "$(ls -A .next/export 2>/dev/null)" ]; then
+            echo "Using .next/export"
+            cp -R .next/export out
+            exit 0
+          fi
+
+          # Fallback: assemble a basic static site from prerendered server/pages and static assets
+          echo "Attempting to assemble out/ from .next prerendered files"
+          mkdir -p out
+
+          # copy static _next assets
+          if [ -d ".next/static" ]; then
+            mkdir -p out/_next
+            cp -R .next/static out/_next/static || true
+          fi
+
+          # copy prerendered pages (if any) from server/pages
+          if [ -d ".next/server/pages" ]; then
+            for f in .next/server/pages/*.html; do
+              [ -f "$f" ] || continue
+              dest="out/$(basename "$f")"
+              cp "$f" "$dest"
+            done
+          fi
+
+          # copy any app exported htmls if present
+          if [ -d ".next/server/app" ]; then
+            find .next/server/app -name '*.html' -exec bash -c 'for p; do dest="out/${p#.next/server/app/}"; mkdir -p "$(dirname "$dest")"; cp "$p" "$dest"; done' bash {} + || true
+          fi
+
+          # Basic check: ensure out is not empty
+          if [ -z "$(ls -A out 2>/dev/null)" ]; then
+            echo "ERROR: could not assemble ./out from build artifacts. Build did not produce an export." >&2
             ls -la .next || true
             exit 1
           fi
