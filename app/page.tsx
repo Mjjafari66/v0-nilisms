@@ -1,5 +1,8 @@
 "use client"
 
+// Force Next to produce a static export for this page when possible
+export const dynamic = "force-static"
+
 import type React from "react"
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
