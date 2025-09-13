@@ -9,6 +9,8 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  // Enable static export output for `next build` in Next 14+.
+  output: 'export',
 }
 
 export default nextConfig

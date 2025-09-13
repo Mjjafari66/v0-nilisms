@@ -39,17 +39,20 @@ jobs:
         env:
           NODE_ENV: production
 
-      - name: Export static site (optional)
-        run: pnpm exec next export -o out || true
-
-      - name: Verify export output
+      - name: Ensure export output
         run: |
-          if [ ! -d "out" ] || [ -z "$(ls -A out 2>/dev/null)" ]; then
-            echo "ERROR: ./out is missing or empty. Make sure 'next export' produced a static site." >&2
-            ls -la || true
+          # Next 14+ uses `output: 'export'` which writes to .next/output/export
+          EXPORT_DIR=".next/output/export"
+          if [ -d "$EXPORT_DIR" ] && [ -n "$(ls -A $EXPORT_DIR 2>/dev/null)" ]; then
+            echo "Found export in $EXPORT_DIR"
+            # copy to ./out for consistency with deploy step
+            rm -rf out || true
+            cp -R "$EXPORT_DIR" out
+          else
+            echo "ERROR: export output not found at $EXPORT_DIR. Build may not have produced a static export." >&2
+            ls -la .next || true
             exit 1
           fi
-
       - name: Configure git for deploy
         run: |
           git config --global user.name "github-actions[bot]"
