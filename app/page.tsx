@@ -258,11 +258,13 @@ export default function HomePage() {
             </Dialog>
 
             <Button
+
               variant="outline"
               size="lg"
               className="text-xl px-10 py-8 group bg-transparent rounded-2xl border-2"
+              onClick={() => { window.location.href = "https://nilisms.com" }}
             >
-              مشاهده نمونه کارها
+              ورود به سیستم
               <ArrowRight className="w-6 h-6 mr-3 group-hover:translate-x-1 transition-transform" />
             </Button>
           </div>
@@ -318,10 +320,7 @@ export default function HomePage() {
                     <span>گزارش‌گیری دقیق و تحلیل نتایج</span>
                   </li>
                 </ul>
-                <Button className="w-full mt-6 group">
-                  شروع ارسال انبوه
-                  <Send className="w-4 h-4 mr-2 group-hover:translate-x-1 transition-transform" />
-                </Button>
+                
               </CardContent>
             </Card>
 
@@ -355,10 +354,7 @@ export default function HomePage() {
                     <span>حذف خودکار شماره‌های غیرفعال</span>
                   </li>
                 </ul>
-                <Button variant="outline" className="w-full mt-6 group bg-transparent">
-                  تست فیلترها
-                  <Target className="w-4 h-4 mr-2 group-hover:rotate-12 transition-transform" />
-                </Button>
+                
               </CardContent>
             </Card>
           </div>
